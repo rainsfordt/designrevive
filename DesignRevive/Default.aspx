@@ -2,41 +2,39 @@
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
 
-    <div class="jumbotron">
-        <h1>ASP.NET</h1>
-        <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-        <p><a href="http://www.asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
-    </div>
-
-    <div class="row">
-        <div class="col-md-4">
-            <h2>Getting Started</h2>
-            <p>
-                ASP.NET Web Forms lets you build dynamic websites using a familiar drag-and-drop, event-driven model.
-            A design surface and hundreds of controls and components let you rapidly build sophisticated, powerful UI-driven sites with data access.
-            </p>
-            <p>
-                <a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301948">Learn more &raquo;</a>
-            </p>
-        </div>
-        <div class="col-md-4">
-            <h2>Get more libraries</h2>
-            <p>
-                NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.
-            </p>
-            <p>
-                <a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301949">Learn more &raquo;</a>
-            </p>
-        </div>
-        <div class="col-md-4">
-            <h2>Web Hosting</h2>
-            <p>
-                You can easily find a web hosting company that offers the right mix of features and price for your applications.
-            </p>
-            <p>
-                <a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301950">Learn more &raquo;</a>
-            </p>
-        </div>
-    </div>
+   <div class="container">
+       <h2>Lead List</h2>
+       <p>Below is a live feed of Leads</p>
+   </div>
+    <table class="table">
+    <thead>
+      <tr>
+        <th>Business</th>
+        <th>Website</th>
+        <th>Email</th>
+        <th>Telephone</th>
+        <th>How Shit</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+        <tbody>
+            <tr class="info">
+                <td>RBS Mentor</td>
+                <td>www.rbsmentor.co.uk</td>
+                <td>kevin@rbsmentor.co.uk</td>
+                <td>8009709814</td>
+                <td>Super Shit</td>
+                <td><input type="checkbox" value="Action"></td>
+            </tr>
+            <tr class="info">
+                <td>Portsmouth City Council</td>
+                <td>www.portsmouth.gov.uk</td>
+                <td>trevor@portsmouth.gov.uk</td>
+                <td>023 9282 2251</td>
+                <td>Not too bad fam</td>
+                <td><input type="checkbox" value="Action"></td>
+            </tr>
+        </tbody>
+    </table>
 
 </asp:Content>
