@@ -1,8 +1,14 @@
 ﻿<%@ Page Title="Home Page" Language="VB" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeBehind="Default.aspx.vb" Inherits="DesignRevive._Default" %>
-
+  
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
 
    <div class="container">
+       <asp:Button ID="ScrapeYell" 
+                   Text="Scrape" 
+                   runat="server"/>
+   </div>
+
+   <div class="container">        
        <h2>Lead List</h2>
        <p>Below is a live feed of Leads</p>
    </div>
