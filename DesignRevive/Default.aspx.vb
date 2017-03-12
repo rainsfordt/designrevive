@@ -80,9 +80,22 @@ TryAgain:
 
     Private Sub Scraper(ByVal URL As String)
 
-        MsgBox(URL)
+        Dim Web As New HtmlWeb
+        Dim BusinessSource As New HtmlAgilityPack.HtmlDocument
 
-        ThreadCount = ThreadCount - 1
+        BusinessSource = Web.Load(URL)
+
+        For Each BusinessName As HtmlNode In BusinessSource.DocumentNode.ChildNodes.            'For Each tag As HtmlAgilityPack.HtmlNode In URL.DocumentNode.ChildNodes
+
+            '    MsgBox(tag.Attributes("class").Value.ToString)
+
+            'Next
+
+            MsgBox(URL)
+
+            ThreadCount = ThreadCount - 1
+
+        Next
 
     End Sub
 
