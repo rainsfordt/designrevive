@@ -82,16 +82,40 @@ TryAgain:
 
         Dim Web As New HtmlWeb
         Dim BusinessSource As New HtmlAgilityPack.HtmlDocument
+        Dim db As New DatabaseActions
+
+        'Declare all values as strings
 
         BusinessSource = Web.Load(URL)
 
-        For Each BusinessName As HtmlNode In BusinessSource.DocumentNode.ChildNodes.            'For Each tag As HtmlAgilityPack.HtmlNode In URL.DocumentNode.ChildNodes
+        Dim BusinessCollection As HtmlNodeCollection = BusinessSource.DocumentNode.SelectNodes("//div[contains(@class,'js-LocalBusiness')]")
+
+        For Each Node As HtmlNode In BusinessCollection.Nodes
+
+            Dim BusinessName As HtmlNode = Node.SelectSingleNode("//h2[@itemprop='name']")
+
+            Dim BusinessWebsite As HtmlNode = Node.SelectSingleNode("//a[@itemprop='url']")
+
+            If IsNothing(Node.SelectSingleNode("//strong[@itemprop='telephone']")) Then
+
+            End If
+
+
+            Dim BusinessTelephone As HtmlNode = Node.SelectSingleNode("//strong[@itemprop='telephone']")
+
+            db.INSERT("BusinessInformation", "BusinessName, Website, Email", "")
+
+            MsgBox(BusinessName.InnerHtml)
+
+            'Dim Name = BusinessSourceName.InnerHtml
+
+            'MsgBox(BusinessSourceName.InnerHtml)
 
             '    MsgBox(tag.Attributes("class").Value.ToString)
 
             'Next
 
-            MsgBox(URL)
+            'MsgBox(URL)
 
             ThreadCount = ThreadCount - 1
 
