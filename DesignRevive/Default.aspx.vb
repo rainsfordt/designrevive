@@ -78,13 +78,12 @@ TryAgain:
 
     End Sub
 
+    'Now we want to scrape the data based on the url
     Private Sub Scraper(ByVal URL As String)
 
         Dim Web As New HtmlWeb
         Dim BusinessSource As New HtmlAgilityPack.HtmlDocument
         Dim db As New DatabaseActions
-
-        'Declare all values as strings
 
         BusinessSource = Web.Load(URL)
 
@@ -92,30 +91,32 @@ TryAgain:
 
         For Each Node As HtmlNode In BusinessCollection.Nodes
 
-            Dim BusinessName As HtmlNode = Node.SelectSingleNode("//h2[@itemprop='name']")
+            Dim NodeBusinessName As HtmlNode = Node.SelectSingleNode("//h2[@itemprop='name']")
 
-            Dim BusinessWebsite As HtmlNode = Node.SelectSingleNode("//a[@itemprop='url']")
+            Dim NodeBusinessWebsite As HtmlNode = Node.SelectSingleNode("//a[@itemprop='url']")
+
+            'Haven't Found Emails to scrape as of yet
+            'If IsNothing(Node.SelectSingleNode("//strong[@itemprop='telephone']")) Then
+
+            '    Dim NodeBusinessEmail As String = "NULL"
+
+            'Else
+
+            '    Dim NodeBusinessEmail As HtmlNode = 
+
+            'End If
 
             If IsNothing(Node.SelectSingleNode("//strong[@itemprop='telephone']")) Then
 
+                Dim NodeBuinessTelephone As String = "NULL"
+
+            Else
+
+                Dim NodeBusinessTelephone As HtmlNode = Node.SelectSingleNode("//strong[@itemprop='telephone']")
+
             End If
 
-
-            Dim BusinessTelephone As HtmlNode = Node.SelectSingleNode("//strong[@itemprop='telephone']")
-
-            db.INSERT("BusinessInformation", "BusinessName, Website, Email")
-
-            MsgBox(BusinessName.InnerHtml)
-
-            'Dim Name = BusinessSourceName.InnerHtml
-
-            'MsgBox(BusinessSourceName.InnerHtml)
-
-            '    MsgBox(tag.Attributes("class").Value.ToString)
-
-            'Next
-
-            'MsgBox(URL)
+            db.INSERT("BusinessInformation", "BusinessName, Website, Email, Telephone", (NodeBusinessName.InnerHtml.ToString & ", " & NodeBusinessWebsite.InnerHtml.ToString & ", Null, " & NodeBusinessTelephone.InnerHtml.ToString))
 
             ThreadCount = ThreadCount - 1
 
