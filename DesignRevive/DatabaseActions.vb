@@ -63,14 +63,26 @@ Public Class DatabaseActions
     End Sub 'For PuntersEdge ONLY - deals with session token for API access
     Public Sub INSERT(ByVal table As String, ByVal columns As String, values As String)
 
+        Try
 
-        command.CommandText = "INSERT INTO " & table & "(" & columns & ")" & " VALUES (" & values & ")"
-        command.Connection = con
+            command.CommandText = "INSERT INTO " & table & "(" & columns & ")" & " VALUES (" & values & ")"
+            command.Connection = con
+TryAgain:
+            If con.State = ConnectionState.Closed Then
+                con.Open()
+                command.ExecuteNonQuery()
+                con.Close()
+            Else
 
-        con.Open()
-        command.ExecuteNonQuery()
-        con.Close()
+                GoTo TryAgain
 
+            End If
+
+        Catch ex As Odbc.OdbcException
+            MsgBox(ex.ToString)
+        Finally
+            If con.State = ConnectionState.Open Then con.Close()
+        End Try
 
 
     End Sub 'General INSERT statement. Accepts table name, columns in string (column1, column2 etc), and values in string ('varchar', int etc)
