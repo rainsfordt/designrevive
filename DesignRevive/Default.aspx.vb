@@ -78,20 +78,45 @@ TryAgain:
 
     End Sub
 
+    'Now we want to scrape the data based on the url
     Private Sub Scraper(ByVal URL As String)
 
         Dim Web As New HtmlWeb
         Dim BusinessSource As New HtmlAgilityPack.HtmlDocument
+        Dim db As New DatabaseActions
 
         BusinessSource = Web.Load(URL)
 
-        For Each BusinessName As HtmlNode In BusinessSource.DocumentNode.ChildNodes.            'For Each tag As HtmlAgilityPack.HtmlNode In URL.DocumentNode.ChildNodes
+        Dim BusinessCollection As HtmlNodeCollection = BusinessSource.DocumentNode.SelectNodes("//div[contains(@class,'js-LocalBusiness')]")
 
-            '    MsgBox(tag.Attributes("class").Value.ToString)
+        For Each Node As HtmlNode In BusinessCollection.Nodes
 
-            'Next
+            Dim NodeBusinessName As HtmlNode = Node.SelectSingleNode("//h2[@itemprop='name']")
 
-            MsgBox(URL)
+            Dim NodeBusinessWebsite As HtmlNode = Node.SelectSingleNode("//a[@itemprop='url']")
+
+            'Haven't Found Emails to scrape as of yet
+            'If IsNothing(Node.SelectSingleNode("//strong[@itemprop='telephone']")) Then
+
+            '    Dim NodeBusinessEmail As String = "NULL"
+
+            'Else
+
+            '    Dim NodeBusinessEmail As HtmlNode = 
+
+            'End If
+
+            If IsNothing(Node.SelectSingleNode("//strong[@itemprop='telephone']")) Then
+
+                Dim NodeBuinessTelephone As String = "NULL"
+
+            Else
+
+                Dim NodeBusinessTelephone As HtmlNode = Node.SelectSingleNode("//strong[@itemprop='telephone']")
+
+            End If
+
+            db.INSERT("BusinessInformation", "BusinessName, Website, Email, Telephone", (NodeBusinessName.InnerHtml.ToString & ", " & NodeBusinessWebsite.InnerHtml.ToString & ", Null, " & NodeBusinessTelephone.InnerHtml.ToString))
 
             ThreadCount = ThreadCount - 1
 
