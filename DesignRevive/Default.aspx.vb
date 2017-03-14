@@ -40,7 +40,7 @@ Public Class _Default
     Protected Sub ScrapeYell_Click() Handles ScrapeYell.Click
         Dim dbfunction As New DatabaseActions
         Dim dt_Source As DataTable = dbfunction.SELECTSTATEMENT("SourceName, URL", "BusinessSources", "WHERE SourceName = 'Yell.com'")
-        Dim dt_Industry As DataTable = dbfunction.SELECTSTATEMENT("TOP 1 IndustryName", "FullIndustryList", "WHERE IndustryName = 'Abortion Alternatives Organizations'")
+        Dim dt_Industry As DataTable = dbfunction.SELECTSTATEMENT("TOP 10 IndustryName", "FullIndustryList", "")
         Dim dt_Towns As DataTable = dbfunction.SELECTSTATEMENT("TOP 1 TownName", "Towns", "")
         Dim SourceName As String = dt_Source.Rows(0).Item(0).ToString()
         Dim URL As String = dt_Source.Rows(0).Item(1).ToString()
@@ -55,16 +55,25 @@ Public Class _Default
                 Dim URLFormatted = Industry_URL.Replace("%area%", TownRow.Item(0).ToString)
 
                 'MsgBox(URL)
-
+                'TryAgain:
+                'If ThreadCount < 10 Then
 
                 Dim Source As String = SourceName & "#" & URLFormatted ' Merge the two strings into 1 to pass into thread
-                Dim Thread As New System.Threading.Thread(AddressOf Scraper)
+                    Dim Thread As New System.Threading.Thread(AddressOf Scraper)
 
                     Thread.IsBackground = True
 
                     Thread.Start(Source) 'You can only pass 1 value into a thread so I have combined the SourceName & URL as Source to pass through the thread
 
-                'ThreadCount = ThreadCount + 1
+                    ThreadCount = ThreadCount + 1
+
+                'Else
+
+                'GoTo TryAgain
+
+                'End If
+
+
 
             Next
 
@@ -89,9 +98,9 @@ Public Class _Default
 
         For Each Node As HtmlAgilityPack.HtmlNode In BusinessCollection
 
-            Dim NodeBusinessName As String = Node.SelectSingleNode("//h2[@itemprop='name']").InnerHtml.ToString
+            Dim NodeBusinessName As String = Node.SelectSingleNode(".//h2[@itemprop='name']").InnerHtml.ToString
 
-            Dim NodeBusinessWebsite As String = Node.SelectSingleNode("//a[@itemprop='url']").InnerHtml.ToString
+            Dim NodeBusinessWebsite As String = Node.SelectSingleNode(".//a[@itemprop='url']").Attributes("href").Value.ToString
 
             Dim NodeBusinessTelephone As String = ""
 
@@ -106,13 +115,13 @@ Public Class _Default
 
             'End If
 
-            If IsNothing(Node.SelectSingleNode("//strong[@itemprop='telephone']")) Then
+            If IsNothing(Node.SelectSingleNode(".//strong[@itemprop='telephone']")) Then
 
                 NodeBusinessTelephone = "NULL"
 
             Else
 
-                NodeBusinessTelephone = Node.SelectSingleNode("//strong[@itemprop='telephone']").InnerHtml.ToString()
+                NodeBusinessTelephone = Node.SelectSingleNode(".//strong[@itemprop='telephone']").InnerHtml.ToString()
 
             End If
 
