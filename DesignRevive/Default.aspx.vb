@@ -39,38 +39,32 @@ Public Class _Default
 
     Protected Sub ScrapeYell_Click() Handles ScrapeYell.Click
         Dim dbfunction As New DatabaseActions
-        Dim dt_SourceURL As DataTable = dbfunction.SELECTSTATEMENT("URL", "BusinessSources", "WHERE SourceName = 'Yell.com'")
-        Dim dt_Industry As DataTable = dbfunction.SELECTSTATEMENT("TOP 10 IndustryName", "FullIndustryList", "")
-        Dim dt_Towns As DataTable = dbfunction.SELECTSTATEMENT("TOP 2 TownName", "Towns", "")
-        Dim URL As String = dt_SourceURL.Rows(0).Item(0).ToString()
+        Dim dt_Source As DataTable = dbfunction.SELECTSTATEMENT("SourceName, URL", "BusinessSources", "WHERE SourceName = 'Yell.com'")
+        Dim dt_Industry As DataTable = dbfunction.SELECTSTATEMENT("TOP 1 IndustryName", "FullIndustryList", "WHERE IndustryName = 'Abortion Alternatives Organizations'")
+        Dim dt_Towns As DataTable = dbfunction.SELECTSTATEMENT("TOP 1 TownName", "Towns", "")
+        Dim SourceName As String = dt_Source.Rows(0).Item(0).ToString()
+        Dim URL As String = dt_Source.Rows(0).Item(1).ToString()
+
 
         For Each IndustryRow As DataRow In dt_Industry.Rows()
 
-            URL = URL.Replace("%industry%", IndustryRow.Item(0).ToString)
+            Dim Industry_URL = URL.Replace("%industry%", IndustryRow.Item(0).ToString)
 
             For Each TownRow As DataRow In dt_Towns.Rows()
 
-                URL = URL.Replace("%area%", TownRow.Item(0).ToString)
+                Dim URLFormatted = Industry_URL.Replace("%area%", TownRow.Item(0).ToString)
 
                 'MsgBox(URL)
-TryAgain:
-                If ThreadCount < 10 Then
 
-                    Dim Thread As New System.Threading.Thread(AddressOf Scraper)
+
+                Dim Source As String = SourceName & "#" & URLFormatted ' Merge the two strings into 1 to pass into thread
+                Dim Thread As New System.Threading.Thread(AddressOf Scraper)
 
                     Thread.IsBackground = True
 
-                    Thread.Start(URL)
+                    Thread.Start(Source) 'You can only pass 1 value into a thread so I have combined the SourceName & URL as Source to pass through the thread
 
-                    ThreadCount = ThreadCount + 1
-
-                Else
-
-                    GoTo TryAgain
-
-                End If
-
-                URL = dt_SourceURL.Rows(0).Item(0).ToString()
+                'ThreadCount = ThreadCount + 1
 
             Next
 
@@ -79,7 +73,11 @@ TryAgain:
     End Sub
 
     'Now we want to scrape the data based on the url
-    Private Sub Scraper(ByVal URL As String)
+    Private Sub Scraper(ByVal Source As String)
+
+        Dim Parts As String() = Source.Split(New Char() {"#"c}) 'Seperate out the string now that it has been passed through
+        Dim SourceName As String = Parts(0).ToString
+        Dim URL As String = Parts(1).ToString
 
         Dim Web As New HtmlWeb
         Dim BusinessSource As New HtmlAgilityPack.HtmlDocument
@@ -87,13 +85,15 @@ TryAgain:
 
         BusinessSource = Web.Load(URL)
 
-        Dim BusinessCollection As HtmlNodeCollection = BusinessSource.DocumentNode.SelectNodes("//div[contains(@class,'js-LocalBusiness')]")
+        Dim BusinessCollection = BusinessSource.DocumentNode.SelectNodes("//div[contains(@class,'js-LocalBusiness')]")
 
-        For Each Node As HtmlNode In BusinessCollection.Nodes
+        For Each Node As HtmlAgilityPack.HtmlNode In BusinessCollection
 
-            Dim NodeBusinessName As HtmlNode = Node.SelectSingleNode("//h2[@itemprop='name']")
+            Dim NodeBusinessName As String = Node.SelectSingleNode("//h2[@itemprop='name']").InnerHtml.ToString
 
-            Dim NodeBusinessWebsite As HtmlNode = Node.SelectSingleNode("//a[@itemprop='url']")
+            Dim NodeBusinessWebsite As String = Node.SelectSingleNode("//a[@itemprop='url']").InnerHtml.ToString
+
+            Dim NodeBusinessTelephone As String = ""
 
             'Haven't Found Emails to scrape as of yet
             'If IsNothing(Node.SelectSingleNode("//strong[@itemprop='telephone']")) Then
@@ -108,17 +108,15 @@ TryAgain:
 
             If IsNothing(Node.SelectSingleNode("//strong[@itemprop='telephone']")) Then
 
-                Dim NodeBuinessTelephone As String = "NULL"
+                NodeBusinessTelephone = "NULL"
 
             Else
 
-                Dim NodeBusinessTelephone As HtmlNode = Node.SelectSingleNode("//strong[@itemprop='telephone']")
+                NodeBusinessTelephone = Node.SelectSingleNode("//strong[@itemprop='telephone']").InnerHtml.ToString()
 
             End If
 
-            db.INSERT("BusinessInformation", "BusinessName, Website, Email, Telephone", (NodeBusinessName.InnerHtml.ToString & ", " & NodeBusinessWebsite.InnerHtml.ToString & ", Null, " & NodeBusinessTelephone.InnerHtml.ToString))
-
-            ThreadCount = ThreadCount - 1
+            db.INSERT("BusinessInformation", "BusinessName, Website, Email, Telephone, SourceName", "'" & (NodeBusinessName & "', '" & NodeBusinessWebsite & "', Null, '" & NodeBusinessTelephone & "', '" & SourceName & "'"))
 
         Next
 
