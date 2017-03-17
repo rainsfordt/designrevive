@@ -64,19 +64,30 @@ Public Class DatabaseActions
     Public Sub INSERT(ByVal table As String, ByVal columns As String, values As String)
 
         Try
+            Using connection As New SqlConnection(ConfigurationManager.ConnectionStrings("DesignReviveDB").ConnectionString)
 
-            command.CommandText = "INSERT INTO " & table & "(" & columns & ")" & " VALUES (" & values & ")"
-            command.Connection = con
-TryAgain:
-            If con.State = ConnectionState.Closed Then
-                con.Open()
-                command.ExecuteNonQuery()
-                con.Close()
-            Else
+                Dim sqlcommand As New SqlCommand
 
-                GoTo TryAgain
+                sqlcommand.CommandText = "INSERT INTO " & table & "(" & columns & ")" & " VALUES (" & values & ")"
+                sqlcommand.Connection = connection
 
-            End If
+                connection.Open()
+                sqlcommand.ExecuteNonQuery()
+                connection.Close()
+
+            End Using
+            '            command.CommandText = "INSERT INTO " & table & "(" & columns & ")" & " VALUES (" & values & ")"
+            '            command.Connection = con
+            'TryAgain:
+            '            If con.State = ConnectionState.Closed Then
+            '                con.Open()
+            '                command.ExecuteNonQuery()
+            '                con.Close()
+            '            Else
+
+            '                GoTo TryAgain
+
+            '            End If
 
         Catch ex As Odbc.OdbcException
             MsgBox(ex.ToString)

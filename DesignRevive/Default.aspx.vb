@@ -7,6 +7,7 @@ Imports DesignRevive.DatabaseActions
 
 Public Module GlobalVariables
     Public ThreadCount As Int16 = 0
+    Public dbfunction As New DatabaseActions
 End Module
 
 Public Class _Default
@@ -14,33 +15,13 @@ Public Class _Default
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs) Handles Me.Load
 
-        'Dim con As New SqlClient.SqlConnection(ConfigurationManager.ConnectionStrings("serverconnection").ConnectionString)
-
-        'Dim command As String = "Select Industry FROM Industries"
-        'Dim da As New SqlClient.SqlDataAdapter(command, con)
-        'Dim ds As New DataSet
-
-        'da.Fill(ds, "Industries")
-
-
-
-
-
-        'Dim URL As New HtmlAgilityPack.HtmlDocument
-        'URL.Load("www.google.com")
-
-        'For Each tag As HtmlAgilityPack.HtmlNode In URL.DocumentNode.ChildNodes
-
-        '    MsgBox(tag.Attributes("class").Value.ToString)
-
-        'Next
-
     End Sub
 
     Protected Sub ScrapeYell_Click() Handles ScrapeYell.Click
-        Dim dbfunction As New DatabaseActions
+
+        'Dim dbfunction As New DatabaseActions
         Dim dt_Source As DataTable = dbfunction.SELECTSTATEMENT("SourceName, URL", "BusinessSources", "WHERE SourceName = 'Yell.com'")
-        Dim dt_Industry As DataTable = dbfunction.SELECTSTATEMENT("TOP 10 IndustryName", "FullIndustryList", "")
+        Dim dt_Industry As DataTable = dbfunction.SELECTSTATEMENT("IndustryName", "FullIndustryList", "WHERE IndustryID > 40")
         Dim dt_Towns As DataTable = dbfunction.SELECTSTATEMENT("TOP 1 TownName", "Towns", "")
         Dim SourceName As String = dt_Source.Rows(0).Item(0).ToString()
         Dim URL As String = dt_Source.Rows(0).Item(1).ToString()
@@ -56,7 +37,7 @@ Public Class _Default
 
                 'MsgBox(URL)
 TryAgain:
-                If ThreadCount < 10 Then
+                If ThreadCount < 1 Then
 
                     Dim Source As String = SourceName & "#" & URLFormatted ' Merge the two strings into 1 to pass into thread
                     Dim Thread As New System.Threading.Thread(AddressOf Scraper)
@@ -92,55 +73,134 @@ TryAgain:
         Dim BusinessSource As New HtmlAgilityPack.HtmlDocument
         Dim db As New DatabaseActions
 
+ThreadReset:
+
+        Threading.Thread.Sleep(10000)
+
         BusinessSource = Web.Load(URL)
 
         Dim BusinessCollection = BusinessSource.DocumentNode.SelectNodes("//div[contains(@class,'js-LocalBusiness')]")
 
-        For Each Node As HtmlAgilityPack.HtmlNode In BusinessCollection
+        If Not IsNothing(BusinessCollection) Then
 
-            Dim NodeBusinessName As String = "" 'Node.SelectSingleNode(".//h2[@itemprop='name']").InnerHtml.ToString
+            For Each Node As HtmlAgilityPack.HtmlNode In BusinessCollection
 
-            If (Node.SelectSingleNode(".//h2[@itemprop='name']").InnerHtml.ToString).Contains("'") Then
+                'Get Business Name
 
-                Dim ReplaceName As String = "''"
+                Dim NodeBusinessName As String = "" 'Node.SelectSingleNode(".//h2[@itemprop='name']").InnerHtml.ToString
 
-                NodeBusinessName = Node.SelectSingleNode(".//h2[@itemprop='name']").InnerHtml.ToString.Replace("'", ReplaceName)
+                If (Node.SelectSingleNode(".//h2[@itemprop='name']").InnerHtml.ToString).Contains("'") Then
 
-            Else
+                    Dim ReplaceName As String = "''"
 
-                NodeBusinessName = Node.SelectSingleNode(".//h2[@itemprop='name']").InnerHtml.ToString
+                    NodeBusinessName = Node.SelectSingleNode(".//h2[@itemprop='name']").InnerHtml.ToString.Replace("'", ReplaceName)
 
-            End If
+                Else
 
-            Dim NodeBusinessWebsite As String = Node.SelectSingleNode(".//a[@itemprop='url']").Attributes("href").Value.ToString
+                    NodeBusinessName = Node.SelectSingleNode(".//h2[@itemprop='name']").InnerHtml.ToString
 
-            Dim NodeBusinessTelephone As String = ""
+                End If
 
-            'Haven't Found Emails to scrape as of yet
-            'If IsNothing(Node.SelectSingleNode("//strong[@itemprop='telephone']")) Then
+                'Get Website
 
-            '    Dim NodeBusinessEmail As String = "NULL"
+                Dim URLNode As HtmlNode = Node.SelectSingleNode(".//a[@itemprop='url']")
+                Dim NodeBusinessWebsite As String = ""
+                If Not IsNothing(URLNode) Then
 
-            'Else
+                    NodeBusinessWebsite = Node.SelectSingleNode(".//a[@itemprop='url']").Attributes("href").Value.ToString()
 
-            '    Dim NodeBusinessEmail As HtmlNode = 
+                Else
 
-            'End If
+                    NodeBusinessWebsite = "NULL"
 
-            If IsNothing(Node.SelectSingleNode(".//strong[@itemprop='telephone']")) Then
+                End If
 
-                NodeBusinessTelephone = "NULL"
 
-            Else
 
-                NodeBusinessTelephone = Node.SelectSingleNode(".//strong[@itemprop='telephone']").InnerHtml.ToString()
+                'If IsNothing(NodeBusinessWebsite) Then
 
-            End If
+                '    NodeBusinessWebsite = "NULL"
 
-            db.INSERT("BusinessInformation", "BusinessName, Website, Email, Telephone, SourceName", "'" & (NodeBusinessName & "', '" & NodeBusinessWebsite & "', Null, '" & NodeBusinessTelephone & "', '" & SourceName & "'"))
+                'Else
+
+                '    NodeBusinessWebsite = Node.SelectSingleNode(".//a[@itemprop='url']").Attributes("href").Value.ToString()
+
+                'End If
+
+                ' Get Telephone
+
+                Dim NodeBusinessTelephone As String = ""
+
+                If IsNothing(Node.SelectSingleNode(".//strong[@itemprop='telephone']")) Then
+
+                    NodeBusinessTelephone = "NULL"
+
+                Else
+
+                    NodeBusinessTelephone = Node.SelectSingleNode(".//strong[@itemprop='telephone']").InnerHtml.ToString()
+
+                End If
+
+                'Haven't Found Emails to scrape as of yet
+                'If IsNothing(Node.SelectSingleNode("//strong[@itemprop='telephone']")) Then
+
+                '    Dim NodeBusinessEmail As String = "NULL"
+
+                'Else
+
+                '    Dim NodeBusinessEmail As HtmlNode = 
+
+                'End If
+
+                db.INSERT("BusinessInformation", "BusinessName, Website, Email, Telephone, SourceName", "'" & (NodeBusinessName & "', '" & NodeBusinessWebsite & "', Null, '" & NodeBusinessTelephone & "', '" & SourceName & "'"))
+
+            Next
+
+            ThreadCount = ThreadCount - 1
+
+        Else
+
+            Threading.Thread.Sleep(5000)
+
+            GoTo ThreadReset
+
+        End If
+
+    End Sub
+
+    'Now that we have the URL's we want to analyze them
+
+    Private Sub Analyzer(ByVal Replace As String) Handles GA.Click
+
+        Dim dt_AnalyzerSource As DataTable = dbfunction.SELECTSTATEMENT("SourceName, URL", "AnalyzerSources", "WHERE SourceName = 'Google Analyzer'")
+        Dim dt_Website As DataTable = dbfunction.SELECTSTATEMENT("TOP 1 Website", "BusinessInformation", "WHERE DateChecked = NULL OR DateChecked <= FORMAT(DATEADD(MM, -1, GETDATE()), 'yyyy-MM-dd') + ' 00:00:00'")
+        Dim dr_Website_URL_Unformatted As String = dt_Website.Rows(0).Item(0).ToString()
+        Dim dr_AnalyzerSource_URL As String = dt_AnalyzerSource.Rows(0).Item(1).ToString()
+
+        For Each WebsiteRow As DataRow In dt_Website.Rows()
+
+
+
+            Dim dr_AnalyzerSource_URL_Formatted = dr_AnalyzerSource_URL.Replace("%sitename%", "hi")
+
+            For Each TownRow As DataRow In dt_Towns.Rows()
+
+                Dim URLFormatted = Industry_URL.Replace("%area%", TownRow.Item(0).ToString)
+
+
+
+
+            Next
 
         Next
 
     End Sub
+    Public Sub WebsiteFormatted()
+        Dim Replace As New ArrayList
+        Replace.Add("Replace")
+
+    End Sub
 
 End Class
+
+
